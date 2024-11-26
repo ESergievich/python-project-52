@@ -7,32 +7,22 @@ from django.views.generic import CreateView, ListView, UpdateView, DeleteView
 from django.utils.translation import gettext as _
 
 from .forms import RegisterUserForm
+from utils import SuccessMessageMixin
 
 
 class UsersListView(ListView):
     model = get_user_model()
     template_name = 'users/users_show.html'
     extra_context = {'title': _('Users')}
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['users'] = self.model.objects.all()
-        return context
+    context_object_name = 'users'
 
 
-class UserRegisterView(CreateView):
+class UserRegisterView(SuccessMessageMixin, CreateView):
     form_class = RegisterUserForm
-    template_name = 'users/user_form.html'
-    extra_context = {'title': _('Registration')}
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['button'] = _('Register')
-        return context
-
-    def get_success_url(self):
-        messages.success(self.request, _('User is successfully registered'))
-        return reverse_lazy('login')
+    template_name = 'form.html'
+    extra_context = {'title': _('Registration'), 'button': _('Register')}
+    success_url = reverse_lazy('login')
+    success_message = _('User is successfully registered')
 
 
 class UserChangeView:
@@ -47,38 +37,18 @@ class UserChangeView:
         return super().dispatch(request, *args, **kwargs)
 
 
-class UserUpdateView(UserChangeView, LoginRequiredMixin, UpdateView):
+class UserUpdateView(UserChangeView, LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = get_user_model()
     form_class = RegisterUserForm
-    template_name = 'users/user_form.html'
-    extra_context = {'title': _('Update user')}
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['button'] = _('Update')
-        return context
-
-    def get_object(self, queryset=None):
-        return self.request.user
-
-    def get_success_url(self):
-        messages.success(self.request, _('User is successfully updated'))
-        return reverse_lazy('users')
+    template_name = 'form.html'
+    extra_context = {'title': _('Update user'), 'button': _('Update')}
+    success_url = reverse_lazy('users')
+    success_message = _('User is successfully updated')
 
 
-class UserDeleteView(UserChangeView, LoginRequiredMixin, DeleteView):
+class UserDeleteView(UserChangeView, SuccessMessageMixin, LoginRequiredMixin, DeleteView):
     model = get_user_model()
-    template_name = 'users/user_delete.html'
-    extra_context = {'title': _('Delete user')}
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['button'] = _('Yes, delete')
-        return context
-
-    def get_object(self, queryset=None):
-        return self.request.user
-
-    def get_success_url(self):
-        messages.success(self.request, _('User is successfully deleted'))
-        return reverse_lazy('users')
+    template_name = 'form_delete.html'
+    extra_context = {'title': _('Delete user'), 'button': _('Yes, delete')}
+    success_url = reverse_lazy('users')
+    success_message = _('User is successfully deleted')
